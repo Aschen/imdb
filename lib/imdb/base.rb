@@ -106,9 +106,9 @@ module Imdb
     def poster
       src = document.at("a[@name='poster'] img")['src'] rescue nil
       case src
-      when /^(http:.+@@)/
+      when /^(https:.+@@)/
         Regexp.last_match[1] + '.jpg'
-      when /^(http:.+?)\.[^\/]+$/
+      when /^(https:.+?)\.[^\/]+$/
         Regexp.last_match[1] + '.jpg'
       end
     end
@@ -117,7 +117,7 @@ module Imdb
     def rating
       document.at('.starbar-meta b').content.split('/').first.strip.to_f rescue nil
     end
-    
+
     # Returns an int containing the Metascore
     def metascore
       criticreviews_document.at('//span[@itemprop="ratingValue"]').content.to_i rescue nil
@@ -154,7 +154,7 @@ module Imdb
 
     # Returns release date for the movie.
     def release_date
-      sanitize_release_date(document.at("h5[text()*='Release Date'] ~ div").content) rescue nil
+      Date.parse(document.xpath('//div[@class="subtext"]//meta[@itemprop="datePublished"]/@content').text) rescue nil
     end
 
     # Returns filming locations from imdb_url/locations
@@ -190,11 +190,11 @@ module Imdb
     def fullcredits_document
       @fullcredits_document ||= Nokogiri::HTML(Imdb::Movie.find_by_id(@id, 'fullcredits'))
     end
-    
+
     def criticreviews_document
       @criticreviews_document ||= Nokogiri::HTML(Imdb::Movie.find_by_id(@id, 'criticreviews'))
     end
-    
+
     # Use HTTParty to fetch the raw HTML for this movie.
     def self.find_by_id(imdb_id, page = :combined)
       open("http://akas.imdb.com/title/tt#{imdb_id}/#{page}")
